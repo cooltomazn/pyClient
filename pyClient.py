@@ -21,7 +21,15 @@ class pyClient:
 
             # send fileName
             self._sendString(serverFileName)
-            
+
+            # check if fetch is possible from server
+            boolByte = 0
+            success = struct.unpack('B', boolByte)[0]
+
+            if(success):
+                print("YAY")
+
+                
         except OSError as e:
             self._clientError(1)
         except socket.timeout as e:
@@ -36,8 +44,8 @@ class pyClient:
         self._sendByteArray(message_bytes)
 
     def _sendByteArray(self, array):
-        soc.send(struct.pack('>i', array.len))
-        soc.send(struct.pack('>i'), array)
+        soc.send(struct.pack('>i', len(array)))
+        soc.sendall(array)
         
     def _clientError(self, messageType):
         match messageType:
