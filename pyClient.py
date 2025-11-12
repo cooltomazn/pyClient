@@ -11,39 +11,39 @@ class pyClient:
         self.socket = socket
         socket.settimeout(10000)
     
-def add(serverFileName, localFilePath):
-    sendDataToServerGetMessage(serverFileName, localFilePath, 1)
+    def sendDataToServerGetMessage(self, serverFileName, localFilePath, operation):
+        try:
+            fileToSend = Path(localFilePath)
+            digest = hashlib.sha256()
 
-def sendDataToServerGetMessage(serverFileName, localFilePath, operation):
-    try:
-        fileToSend = Path(localFilePath)
-        digest = hashlib.sha256()
+            # send operation code
+            soc.send(struct.pack('>i', operation))
 
-        # send operation code
-        soc.send(struct.pack('>i', operation))
+            # send fileName
+            self._sendString(serverFileName)
+            
+        except OSError as e:
+            self._clientError(1)
+        except socket.timeout as e:
+            self._clientError(0)
 
-        # send fileName
-        _sendString(serverFileName)
-        
-    except OSError as e:
-        _clientError(1)
-    except socket.timeout as e:
-        _clientError(0)
-
-def _sendString(message):
-    # send length then message
-    message_bytes = message.encode('utf-8')
-    _sendByteArray(message_bytes)
-
-def _sendByteArray(array):
-    soc.send(struct.pack('>i', array.len))
-    soc.send(struct.pack('>i'), array)
+    def add(self, serverFileName, localFilePath):
+        self.sendDataToServerGetMessage(serverFileName, localFilePath, 1)
     
-def _clientError(messageType):
-    match messageType:
-        case 0: print("ERROR: Request timeout. Disconnecting from server.")
-        case 1: print("ERROR: Cannot connect to server, the server may not be active.")
-        case _: print("ERROR: Something went wrong. Please contact administrator.")
+    def _sendString(self, message):
+        # send length then message
+        message_bytes = message.encode('utf-8')
+        self._sendByteArray(message_bytes)
+
+    def _sendByteArray(self, array):
+        soc.send(struct.pack('>i', array.len))
+        soc.send(struct.pack('>i'), array)
+        
+    def _clientError(self, messageType):
+        match messageType:
+            case 0: print("ERROR: Request timeout. Disconnecting from server.")
+            case 1: print("ERROR: Cannot connect to server, the server may not be active.")
+            case _: print("ERROR: Something went wrong. Please contact administrator.")
             
         
 
