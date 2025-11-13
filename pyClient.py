@@ -22,18 +22,51 @@ class pyClient:
             # send fileName
             self._sendString(serverFileName)
 
+            # send file size
+            fileSize = fileToSend.stat().st_size
+            soc.send(fileSize.to_bytes(8, byteorder='big'))
+
             # check if fetch is possible from server
-            boolByte = 0
-            success = struct.unpack('B', boolByte)[0]
+            success = success = bool(ord(soc.recv(1)))
 
             if(success):
-                print("YAY")
+                # 64kb buffer
+                buffer = 64 * 1024
 
-                
+                with open(localFilePath, 'rb') as f:
+                    while True:
+                        fileChunk = f.read(buffer)
+                        if not fileChunk:
+                            break
+                        digest.update(fileChunk)
+                        soc.send(fileChunk)
+
+            # corrupt test case
+            # digest.update(b"123")
+            
+            # digest hash and send to server
+            hash = digest.digest()
+            self._sendByteArray(hash)
+
+            # print message from server
+            self._readAndPrintIncomingMessage()
+
         except OSError as e:
             self._clientError(1)
         except socket.timeout as e:
             self._clientError(0)
+
+    def _readAndPrintIncomingMessage(self):
+        messageLength = soc.recv(4)
+        length = int.from_bytes(messageLength, byteorder='big')
+        message = b''
+        while len(message) < length:
+            msgChunk = soc.recv(length - len(message))
+            if not msgChunk:
+                break
+            message += msgChunk
+
+        print(message.decode('utf-8'))
 
     def add(self, serverFileName, localFilePath):
         self.sendDataToServerGetMessage(serverFileName, localFilePath, 1)
@@ -53,12 +86,12 @@ class pyClient:
             case 1: print("ERROR: Cannot connect to server, the server may not be active.")
             case _: print("ERROR: Something went wrong. Please contact administrator.")
             
-        
+# MAIN (I'm not used to this format...)
 
 soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 soc.connect(('localhost', 50777))
 print("Connected to server!")
 
 client = pyClient(soc)
-client.add("alice.txt", "alice.txt")
+client.add("bunny-2.jpg", "bunny-2.jpg")
 
