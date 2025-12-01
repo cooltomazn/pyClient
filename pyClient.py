@@ -100,7 +100,7 @@ class pyClient:
             
 
             # check if file exists on server (for append)
-            success = success = bool(ord(self.socket.recv(1)))
+            success = bool(ord(self.socket.recv(1)))
 
             if(success):
                 # 64kb buffer
