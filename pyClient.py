@@ -105,7 +105,7 @@ class pyClient:
             if(success):
                 # 64kb buffer
                 buffer = 64 * 1024
-
+                totalSent = 0
                 with open(localFilePath, 'rb') as f:
                     while True:
                         fileChunk = f.read(buffer)
@@ -113,6 +113,8 @@ class pyClient:
                             break
                         digest.update(fileChunk)
                         self.socket.sendall(fileChunk)
+                        totalSent += len(fileChunk)
+                        print(f"Total data send: {totalSent}/{fileSize}")
 
                 # corrupt test case
                 # digest.update(b"123")
@@ -171,7 +173,8 @@ try:
     client = pyClient(soc)
     # (serverFileName, localFileName)
     # client.add("tomato.txt", clientFilePath / "tomato.txt")
-    client.add("fatty.iso", clientFilePath / "big.iso")
+    # client.add("fatty.iso", clientFilePath / "big.iso")
+    client.add("aliceSuper.txt", clientFilePath / "alice.txt")
     # client.append("tomato.txt", clientFilePath / "tomato.txt")
 
     # client.fetch("fatty.iso", clientFilePath / "big2.iso")
